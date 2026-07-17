@@ -1,44 +1,47 @@
 #!/bin/sh
 # Comando: install
 
-# Aplica a instalacao de um agente (ja validado) em um alvo declarado.
-# Idempotente. Imprime resultado. Retorna 0 (sucesso/no-op) ou 3 (conflito).
+# Renderiza a fonte canonica para o alvo e instala o artefato.
+# Idempotente. Imprime resultado. Retorna 0 (sucesso/no-op), 3 (conflito), 6 (render falhou).
 install_agent() { # name target
   name=$1 target=$2
   proj=$PWD
   lockfile=$(lock_path "$proj")
   mf=$(manifest_path "$AGENTS_HOME" "$name")
   version=$(manifest_field "$mf" version)
-  dest=$(manifest_target_dest "$mf" "$target")
-  [ -n "$dest" ] || dest=$(targets_default_dest "$CONF" "$target")
+  src_rel=$(manifest_source "$mf")
+  source="$AGENTS_HOME/agents/$name/$src_rel"
+  dest=$(targets_default_dest "$CONF" "$target"); dest=${dest%/}
+  ext=$(targets_ext "$CONF" "$target")
+  destrel="$dest/$name.$ext"
+  destabs="$proj/$destrel"
 
-  tmp="${TMPDIR:-/tmp}/agents.plan.$$"
-  plan_lines "$AGENTS_HOME" "$name" "$target" "$dest" >"$tmp"
+  art="${TMPDIR:-/tmp}/agents.art.$$"
+  if ! render_target "$target" "$source" "$name" >"$art"; then
+    rm -f "$art"
+    return 6
+  fi
 
-  if ! plan_check_conflicts "$proj" "$lockfile" "$name" <"$tmp"; then
-    rm -f "$tmp"
+  if ! plan_conflict "$proj" "$lockfile" "$name" "$destrel"; then
+    rm -f "$art"
     return 3
   fi
 
   changed=0
-  while IFS='	' read -r src destrel; do
-    [ -n "$destrel" ] || continue
-    destabs="$proj/$destrel"
-    d=$(dirname "$destabs")
-    [ -d "$d" ] || mkdir -p "$d"
-    if [ ! -e "$destabs" ]; then
-      cp "$src" "$destabs"
-      changed=1
-    elif ! cmp -s "$src" "$destabs"; then
-      cp "$src" "$destabs"
-      changed=1
-    fi
-    if ! lock_belongs "$lockfile" "$name" "$destrel"; then
-      lock_add "$lockfile" "$name" "$version" "$target" "$destrel"
-      changed=1
-    fi
-  done <"$tmp"
-  rm -f "$tmp"
+  d=$(dirname "$destabs")
+  [ -d "$d" ] || mkdir -p "$d"
+  if [ ! -e "$destabs" ]; then
+    cp "$art" "$destabs"
+    changed=1
+  elif ! cmp -s "$art" "$destabs"; then
+    cp "$art" "$destabs"
+    changed=1
+  fi
+  if ! lock_belongs "$lockfile" "$name" "$destrel"; then
+    lock_add "$lockfile" "$name" "$version" "$target" "$destrel"
+    changed=1
+  fi
+  rm -f "$art"
 
   if [ "$changed" -eq 1 ]; then
     printf 'instalado %s@%s em %s\n' "$name" "$version" "$target"

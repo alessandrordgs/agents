@@ -1,6 +1,6 @@
 #!/bin/sh
 # Deteccao de alvo e resolucao de destino a partir de targets.conf.
-# targets.conf: target|dest_default|marker|min_version
+# targets.conf: target|dest_default|marker|min_version|ext
 
 targets_field() { # conf target fieldnum
   awk -F'|' -v tgt="$2" -v n="$3" '
@@ -20,6 +20,7 @@ targets_known() { # conf target
 targets_default_dest() { targets_field "$1" "$2" 2; }
 targets_marker() { targets_field "$1" "$2" 3; }
 targets_min_version() { targets_field "$1" "$2" 4; }
+targets_ext() { targets_field "$1" "$2" 5; }
 
 targets_all() { # conf
   awk -F'|' '/^[[:space:]]*#/ { next } NF >= 1 && $1 != "" { print $1 }' "$1"

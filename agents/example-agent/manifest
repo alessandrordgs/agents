@@ -1,12 +1,5 @@
 name: example-agent
 version: 1.0.0
 description: Agente de exemplo usado como fixture de testes
-target: claude
-  dest: .claude/agents
-  file: claude/example-agent.md
-target: codex
-  dest: .codex/prompts
-  file: codex/example-agent.md
-target: opencode
-  dest: .opencode/agent
-  file: opencode/example-agent.md
+source: agent.md
+targets: claude codex opencode

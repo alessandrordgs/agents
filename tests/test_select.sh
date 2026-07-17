@@ -1,15 +1,15 @@
 #!/bin/sh
-# T028: selecao interativa e instalacao de multiplos agentes.
+# T028 (feature 001): selecao interativa e instalacao de multiplos agentes.
 set -eu
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/tests/assert.sh"
 AGENTS="$ROOT/bin/agents"
 
-# Selecao interativa por numero (le "1" da entrada padrao)
+# Selecao interativa por numero (le "1" da entrada padrao; agentes em ordem alfabetica)
 proj=$(mktemp -d); mkdir -p "$proj/.claude"; cd "$proj"
 rc=0; printf '1\n' | "$AGENTS" install --target claude >/dev/null 2>&1 || rc=$?
 assert_exit 0 "$rc" "selecao interativa por numero sai 0"
-assert_file_exists "$proj/.claude/agents/example-agent.md" "agente selecionado foi instalado"
+assert_file_exists "$proj/.claude/agents/example-agent.md" "primeiro agente selecionado foi instalado"
 cd "$ROOT"; rm -rf "$proj"
 
 # Selecao "all"
@@ -25,15 +25,14 @@ cp "$ROOT/targets.conf" "$cat/targets.conf"
 mkdir -p "$cat/lib"
 cp -r "$ROOT/lib/." "$cat/lib/"
 for a in agent-a agent-b; do
-  mkdir -p "$cat/agents/$a/claude"
-  printf '# %s\n' "$a" >"$cat/agents/$a/claude/$a.md"
+  mkdir -p "$cat/agents/$a"
+  printf -- '---\nname: %s\ndescription: agente %s\n---\ncorpo de %s\n' "$a" "$a" "$a" >"$cat/agents/$a/agent.md"
   cat >"$cat/agents/$a/manifest" <<EOF
 name: $a
 version: 1.0.0
 description: agente $a para teste multi
-target: claude
-  dest: .claude/agents
-  file: claude/$a.md
+source: agent.md
+targets: claude
 EOF
 done
 

@@ -20,6 +20,8 @@ export CONF
 # shellcheck source=/dev/null
 . "$LIB/plan.sh"
 # shellcheck source=/dev/null
+. "$LIB/render.sh"
+# shellcheck source=/dev/null
 . "$LIB/commands/install.sh"
 # shellcheck source=/dev/null
 . "$LIB/commands/list.sh"

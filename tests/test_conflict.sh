@@ -1,5 +1,5 @@
 #!/bin/sh
-# T011: conflito, recusa por alvo, agente desconhecido, manifesto invalido (SC-004, FR-004/06/07/14).
+# T011: conflito, recusa por alvo, agente desconhecido, manifesto invalido (SC-004, FR-004/06/07/10).
 set -eu
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/tests/assert.sh"
@@ -23,20 +23,18 @@ cd "$ROOT"; rm -rf "$proj"
 # Catalogo temporario para casos de suporte e manifesto invalido
 cat=$(mktemp -d)
 cp "$ROOT/targets.conf" "$cat/targets.conf"
-mkdir -p "$cat/lib" "$cat/agents"
+mkdir -p "$cat/lib"
 cp -r "$ROOT/lib/." "$cat/lib/"
-cp "$ROOT/bin/agents" "$cat/agents-bin" 2>/dev/null || true
 
 # 3) Alvo nao suportado: agente que so declara claude, instalar em codex
-mkdir -p "$cat/agents/only-claude/claude"
-printf '# only\n' >"$cat/agents/only-claude/claude/a.md"
+mkdir -p "$cat/agents/only-claude"
+printf -- '---\nname: only-claude\ndescription: so claude\n---\ncorpo\n' >"$cat/agents/only-claude/agent.md"
 cat >"$cat/agents/only-claude/manifest" <<'EOF'
 name: only-claude
 version: 1.0.0
 description: suporta apenas claude
-target: claude
-  dest: .claude/agents
-  file: claude/a.md
+source: agent.md
+targets: claude
 EOF
 proj=$(mktemp -d); mkdir -p "$proj/.codex"; cd "$proj"
 rc=0; AGENTS_HOME="$cat" "$AGENTS" install only-claude --target codex >/dev/null 2>&1 || rc=$?
@@ -45,19 +43,18 @@ assert_file_absent "$proj/.agents/lock" "nada instalado quando alvo nao suportad
 cd "$ROOT"; rm -rf "$proj"
 
 # 4) Manifesto invalido (sem version): rejeitado antes de escrever
-mkdir -p "$cat/agents/broken/claude"
-printf '# x\n' >"$cat/agents/broken/claude/a.md"
+mkdir -p "$cat/agents/broken"
+printf -- '---\nname: broken\ndescription: x\n---\ncorpo\n' >"$cat/agents/broken/agent.md"
 cat >"$cat/agents/broken/manifest" <<'EOF'
 name: broken
 description: sem versao
-target: claude
-  dest: .claude/agents
-  file: claude/a.md
+source: agent.md
+targets: claude
 EOF
 proj=$(mktemp -d); mkdir -p "$proj/.claude"; cd "$proj"
 rc=0; AGENTS_HOME="$cat" "$AGENTS" install broken --target claude >/dev/null 2>&1 || rc=$?
 assert_exit 4 "$rc" "manifesto invalido retorna 4"
-assert_file_absent "$proj/.claude/agents/a.md" "nada escrito com manifesto invalido"
+assert_file_absent "$proj/.claude/agents/broken.md" "nada escrito com manifesto invalido"
 cd "$ROOT"; rm -rf "$proj"
 
 rm -rf "$cat"

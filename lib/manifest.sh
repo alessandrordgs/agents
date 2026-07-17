@@ -1,6 +1,11 @@
 #!/bin/sh
-# Parse e validacao do manifesto do agente.
-# Manifesto: agents/<name>/manifest (formato linha a linha, ver data-model.md).
+# Parse e validacao do manifesto do agente (schema com source + targets).
+# Manifesto: agents/<name>/manifest
+#   name: <name>
+#   version: <semver>
+#   description: <one line>
+#   source: <arquivo canonico relativo a agents/<name>/>
+#   targets: <lista separada por espaco>
 
 manifest_path() { # catalog name
   printf '%s/agents/%s/manifest' "$1" "$2"
@@ -12,28 +17,19 @@ manifest_field() { # manifest_file key
   ' "$1"
 }
 
-manifest_targets() { # manifest_file
-  awk '
-    /^target:[[:space:]]/ { v = $0; sub(/^target:[[:space:]]*/, "", v); print v }
-  ' "$1"
+manifest_source() { # manifest_file
+  manifest_field "$1" source
+}
+
+manifest_targets() { # manifest_file  -> lista separada por espaco
+  manifest_field "$1" targets
 }
 
 manifest_supports() { # manifest_file target
-  manifest_targets "$1" | grep -qx "$2"
-}
-
-manifest_target_dest() { # manifest_file target
-  awk -v tgt="$2" '
-    /^target:[[:space:]]/ { v = $0; sub(/^target:[[:space:]]*/, "", v); incur = (v == tgt); next }
-    incur && $0 ~ /^[[:space:]]+dest:[[:space:]]/ { v = $0; sub(/^[[:space:]]*dest:[[:space:]]*/, "", v); print v; exit }
-  ' "$1"
-}
-
-manifest_target_files() { # manifest_file target
-  awk -v tgt="$2" '
-    /^target:[[:space:]]/ { v = $0; sub(/^target:[[:space:]]*/, "", v); incur = (v == tgt); next }
-    incur && $0 ~ /^[[:space:]]+file:[[:space:]]/ { v = $0; sub(/^[[:space:]]*file:[[:space:]]*/, "", v); print v }
-  ' "$1"
+  for t in $(manifest_targets "$1"); do
+    [ "$t" = "$2" ] && return 0
+  done
+  return 1
 }
 
 # Retorna 0 se valido; caso contrario imprime erro em stderr e retorna 1.
@@ -44,12 +40,17 @@ manifest_validate() { # catalog name targets_conf
     printf 'erro: manifesto ausente para o agente "%s"\n' "$name" >&2
     return 1
   fi
-  for k in name version description; do
+  for k in name version description source; do
     if [ -z "$(manifest_field "$mf" "$k")" ]; then
       printf 'erro: manifesto de "%s" sem campo obrigatorio "%s"\n' "$name" "$k" >&2
       return 1
     fi
   done
+  src=$(manifest_source "$mf")
+  if [ ! -f "$catalog/agents/$name/$src" ]; then
+    printf 'erro: fonte "%s" do agente "%s" nao existe\n' "$src" "$name" >&2
+    return 1
+  fi
   tgts=$(manifest_targets "$mf")
   if [ -z "$tgts" ]; then
     printf 'erro: manifesto de "%s" nao declara nenhum alvo\n' "$name" >&2
@@ -60,17 +61,6 @@ manifest_validate() { # catalog name targets_conf
       printf 'erro: alvo desconhecido "%s" no manifesto de "%s"\n' "$t" "$name" >&2
       return 1
     fi
-    files=$(manifest_target_files "$mf" "$t")
-    if [ -z "$files" ]; then
-      printf 'erro: alvo "%s" de "%s" sem nenhum arquivo\n' "$t" "$name" >&2
-      return 1
-    fi
-    for f in $files; do
-      if [ ! -f "$catalog/agents/$name/$f" ]; then
-        printf 'erro: arquivo "%s" do alvo "%s" nao existe em "%s"\n' "$f" "$t" "$name" >&2
-        return 1
-      fi
-    done
   done
   return 0
 }

@@ -23,17 +23,14 @@ cmd_update() {
     return 0
   fi
 
-  # Pre-checa conflito da nova versao usando o lock atual (arquivos antigos
-  # pertencem ao agente), para nunca deixar estado parcial.
-  dest=$(manifest_target_dest "$mf" "$target")
-  [ -n "$dest" ] || dest=$(targets_default_dest "$CONF" "$target")
-  tmp="${TMPDIR:-/tmp}/agents.upd.$$"
-  plan_lines "$AGENTS_HOME" "$name" "$target" "$dest" >"$tmp"
-  if ! plan_check_conflicts "$proj" "$lockfile" "$name" <"$tmp"; then
-    rm -f "$tmp"
+  # Pre-checa conflito no destino atual (o artefato antigo pertence ao agente),
+  # para nunca deixar estado parcial.
+  dest=$(targets_default_dest "$CONF" "$target"); dest=${dest%/}
+  ext=$(targets_ext "$CONF" "$target")
+  destrel="$dest/$name.$ext"
+  if ! plan_conflict "$proj" "$lockfile" "$name" "$destrel"; then
     return 3
   fi
-  rm -f "$tmp"
 
   remove_agent_files "$proj" "$lockfile" "$name"
   lock_remove_agent "$lockfile" "$name"

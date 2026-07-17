@@ -1,6 +1,5 @@
 name: ui-design-strategist
 version: 1.0.0
 description: Diretor de design senior que faz descoberta antes de propor direcao visual
-target: claude
-  dest: .claude/agents
-  file: claude/ui-design-strategist.md
+source: agent.md
+targets: claude codex opencode

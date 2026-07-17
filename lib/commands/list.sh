@@ -22,7 +22,7 @@ cmd_list() {
     if [ "$only_installed" -eq 1 ] && [ "$installed" = no ]; then continue; fi
     version=$(manifest_field "$mf" version)
     desc=$(manifest_field "$mf" description)
-    tgts=$(manifest_targets "$mf" | paste -sd, -)
+    tgts=$(manifest_targets "$mf" | tr ' ' ',')
     mark=" "
     if [ "$installed" = yes ]; then mark="*"; fi
     printf '%s %-20s %-8s [%s] %s\n' "$mark" "$name" "$version" "$tgts" "$desc"
