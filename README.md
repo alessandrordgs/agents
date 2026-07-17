@@ -80,6 +80,16 @@ agents install code-reviewer --target codex
 | 4 | Agente desconhecido, manifesto invalido ou alvo nao suportado |
 | 5 | Alvo nao detectado/desconhecido |
 
+## Agentes disponiveis
+
+| Agente | Alvos | Descricao |
+|--------|-------|-----------|
+| `ui-design-strategist` | claude | Diretor de design senior que faz descoberta antes de propor direcao visual |
+| `frontend-dev` | claude | Desenvolvedor frontend senior (Next.js/React e React Native/Expo) que executa design e correcoes |
+| `example-agent` | claude, codex, opencode | Agente de exemplo usado como fixture de testes |
+
+Rode `agents list` para ver a versao e a marcacao de instalados no seu projeto.
+
 ## Como adicionar um novo agente
 
 Um agente e um diretorio em `agents/<nome>/` contendo um arquivo `manifest` e os
