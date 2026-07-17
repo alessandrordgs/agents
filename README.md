@@ -6,18 +6,25 @@ POSIX e Git.
 
 ## Instalacao
 
+Um comando, sem clonar nada a mao:
+
 ```sh
-sh install.sh
+curl -fsSL https://raw.githubusercontent.com/alessandrordgs/agents/main/install.sh | sh
 ```
 
-Isso clona/atualiza o repositorio e cria o comando `agents` em `~/.local/bin`.
+O bootstrap clona o repositorio em `~/.agents` e cria o comando `agents` em
+`~/.local/bin`. Rodar de novo apenas atualiza (`git pull`). Se voce ja tem o repo
+clonado, `sh install.sh` faz o mesmo.
+
 Variaveis de ambiente reconhecidas:
 
 - `AGENTS_REPO`: URL do repositorio a clonar (default: o repo oficial)
 - `AGENTS_HOME`: onde o repositorio fica (default: `~/.agents`)
 - `AGENTS_BINDIR`: onde o link `agents` e criado (default: `~/.local/bin`)
 
-Se `AGENTS_BINDIR` nao estiver no seu PATH, o script avisa.
+Se `AGENTS_BINDIR` nao estiver no seu PATH, o script avisa. O repositorio precisa
+ficar em disco (`~/.agents`) porque os agentes sao renderizados de la para o seu
+projeto; o `curl | sh` so evita o clone manual.
 
 ## Uso
 
