@@ -11,10 +11,10 @@ refresh_installed() {
   names=$(awk -F'\t' '{ print $1 }' "$lockfile" | sort -u)
   [ -n "$names" ] || return 0
 
-  printf 'Atualizando agentes instalados em %s ...\n' "$proj"
+  ui_info "Atualizando agentes instalados em $proj"
   for name in $names; do
     if ! manifest_validate "$AGENTS_HOME" "$name" "$CONF" >/dev/null 2>&1; then
-      printf '  %s: nao esta mais no catalogo, mantido\n' "$name"
+      ui_warn "$name: nao esta mais no catalogo, mantido"
       continue
     fi
     tgts=$(awk -F'\t' -v n="$name" '$1 == n { print $3 }' "$lockfile" | sort -u)
@@ -22,13 +22,13 @@ refresh_installed() {
     remove_agent_files "$proj" "$lockfile" "$name"
     lock_remove_agent "$lockfile" "$name"
     for t in $tgts; do
-      install_agent "$name" "$t" >/dev/null 2>&1 || printf '  %s (%s): falha\n' "$name" "$t" >&2
+      install_agent "$name" "$t" >/dev/null 2>&1 || ui_err "$name ($t): falha"
     done
     newv=$(lock_version "$lockfile" "$name")
     if [ "$oldv" = "$newv" ]; then
-      printf '  %s: ok (%s)\n' "$name" "$newv"
+      ui_skip "$name: ok ($newv)"
     else
-      printf '  %s: %s -> %s\n' "$name" "$oldv" "$newv"
+      ui_ok "$name: $oldv -> $newv"
     fi
   done
 }
@@ -40,12 +40,11 @@ self_update() {
     printf 'erro: %s nao e um repositorio git; reinstale via install.sh\n' "$AGENTS_HOME" >&2
     return 1
   fi
-  printf 'Atualizando agents em %s ...\n' "$AGENTS_HOME"
-  if ! git -C "$AGENTS_HOME" pull --ff-only; then
-    printf 'erro: falha ao atualizar (git pull).\n' >&2
+  if ! spinner_run 'Atualizando agents' git -C "$AGENTS_HOME" pull --ff-only --quiet; then
+    ui_err 'falha ao atualizar (git pull)'
     return 1
   fi
-  printf 'agents atualizado.\n'
+  ui_ok 'agents atualizado'
   refresh_installed
   return 0
 }
@@ -63,7 +62,7 @@ self_update_check() {
     [ $((now - last)) -lt 86400 ] && return 0
   fi
 
-  if ! git -C "$AGENTS_HOME" fetch --quiet 2>/dev/null; then
+  if ! spinner_run 'Procurando atualizacoes do agents' git -C "$AGENTS_HOME" fetch --quiet 2>/dev/null; then
     printf '%s\n' "$now" >"$stamp" 2>/dev/null || true
     return 0
   fi

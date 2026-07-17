@@ -16,7 +16,16 @@ tui_load_catalog() {
   done
 }
 
-tui_trunc() { printf '%.46s' "$1"; }
+tui_trunc() { printf '%.44s' "$1"; }
+
+tui_colors() {
+  if [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
+    T_RESET=$(printf '\033[0m'); T_BOLD=$(printf '\033[1m'); T_DIM=$(printf '\033[2m')
+    T_CYAN=$(printf '\033[36m'); T_GREEN=$(printf '\033[32m')
+  else
+    T_RESET='' T_BOLD='' T_DIM='' T_CYAN='' T_GREEN=''
+  fi
+}
 
 # Le uma tecla de /dev/tty e ecoa um token: UP DOWN SPACE ENTER ALL QUIT OTHER.
 tui_read_key() {
@@ -45,21 +54,27 @@ tui_read_key() {
 
 tui_render() { # first?
   if [ "$1" -ne 1 ]; then
-    printf '\033[%dA' "$_ag_N" >/dev/tty
+    printf '\033[%dA' "$((_ag_N + 1))" >/dev/tty
   fi
   i=1 nm='' ds=''
   while [ "$i" -le "$_ag_N" ]; do
     eval "nm=\$_ag_name_$i"
     eval "ds=\$_ag_desc_$i"
-    if [ "$i" -eq "$_ag_cur" ]; then ptr='>'; else ptr=' '; fi
-    case "$_ag_sel" in *" $i "*) box='[x]' ;; *) box='[ ]' ;; esac
+    case "$_ag_sel" in
+      *" $i "*) box="$T_GREEN●$T_RESET" ;;
+      *) box="$T_DIM○$T_RESET" ;;
+    esac
     if [ "$i" -eq "$_ag_cur" ]; then
-      printf '\r\033[K\033[7m %s %s %-22s %s \033[0m\n' "$ptr" "$box" "$nm" "$(tui_trunc "$ds")" >/dev/tty
+      printf '\r\033[K %s›%s %s %s%-22s%s %s%s%s\n' \
+        "$T_CYAN" "$T_RESET" "$box" "$T_BOLD" "$nm" "$T_RESET" "$T_DIM" "$(tui_trunc "$ds")" "$T_RESET" >/dev/tty
     else
-      printf '\r\033[K %s %s %-22s %s\n' "$ptr" "$box" "$nm" "$(tui_trunc "$ds")" >/dev/tty
+      printf '\r\033[K   %s %-22s %s%s%s\n' \
+        "$box" "$nm" "$T_DIM" "$(tui_trunc "$ds")" "$T_RESET" >/dev/tty
     fi
     i=$((i + 1))
   done
+  cnt=$(printf '%s' "$_ag_sel" | wc -w | tr -d ' ')
+  printf '\r\033[K %s%s marcado(s)%s\n' "$T_DIM" "$cnt" "$T_RESET" >/dev/tty
 }
 
 tui_toggle() { # selected cur  -> nova string
@@ -76,6 +91,7 @@ tui_pick() {
     printf 'catalogo vazio\n' >&2
     return 1
   fi
+  tui_colors
 
   _ag_stty=$(stty -g </dev/tty)
   # shellcheck disable=SC2064
@@ -83,7 +99,8 @@ tui_pick() {
   stty -echo -icanon min 1 time 0 </dev/tty
   printf '\033[?25l' >/dev/tty
 
-  printf 'Selecione os agentes:  setas/jk move · espaco marca · a todos · enter confirma · q cancela\n' >/dev/tty
+  printf '%sEscolha os agentes%s  %ssetas marca com espaco · a todos · enter confirma · q cancela%s\n' \
+    "$T_BOLD" "$T_RESET" "$T_DIM" "$T_RESET" >/dev/tty
 
   _ag_cur=1 _ag_sel=' '
   tui_render 1

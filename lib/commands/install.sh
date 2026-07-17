@@ -44,9 +44,9 @@ install_agent() { # name target
   rm -f "$art"
 
   if [ "$changed" -eq 1 ]; then
-    printf 'instalado %s@%s em %s\n' "$name" "$version" "$target"
+    ui_ok "instalado $name@$version em $target"
   else
-    printf 'nada a fazer (%s@%s ja instalado em %s)\n' "$name" "$version" "$target"
+    ui_skip "nada a fazer ($name@$version ja instalado em $target)"
   fi
   return 0
 }

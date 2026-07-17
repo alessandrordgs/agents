@@ -27,6 +27,8 @@ export CONF
 # shellcheck source=/dev/null
 . "$LIB/lock.sh"
 # shellcheck source=/dev/null
+. "$LIB/ui.sh"
+# shellcheck source=/dev/null
 . "$LIB/plan.sh"
 # shellcheck source=/dev/null
 . "$LIB/render.sh"

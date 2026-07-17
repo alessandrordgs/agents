@@ -24,8 +24,10 @@ cmd_list() {
     desc=$(manifest_field "$mf" description)
     tgts=$(manifest_targets "$mf" | tr ' ' ',')
     mark=" "
-    if [ "$installed" = yes ]; then mark="*"; fi
-    printf '%s %-20s %-8s [%s] %s\n' "$mark" "$name" "$version" "$tgts" "$desc"
+    if [ "$installed" = yes ]; then mark="$C_GREEN*$C_RESET"; fi
+    printf '%s %s%-20s%s %s%-8s%s %s[%s]%s %s\n' \
+      "$mark" "$C_BOLD" "$name" "$C_RESET" "$C_DIM" "$version" "$C_RESET" \
+      "$C_GRAY" "$tgts" "$C_RESET" "$desc"
     found=1
   done
 
