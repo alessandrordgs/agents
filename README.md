@@ -22,10 +22,11 @@ Se `AGENTS_BINDIR` nao estiver no seu PATH, o script avisa.
 ## Uso
 
 ```sh
+agents install                   # modo interativo: escolha da lista o que instalar
+agents install <nome> [<nome>...] # instala um ou mais agentes pelo nome
+agents install <nome> --target claude
 agents list                      # catalogo; marca com * os instalados no projeto
 agents list --installed          # apenas os instalados no projeto atual
-agents install <nome>            # detecta o alvo pelo projeto
-agents install <nome> --target claude
 agents update <nome>             # atualiza para a versao mais nova do catalogo
 agents remove <nome>             # remove, restaurando o estado anterior
 agents --help
@@ -33,6 +34,21 @@ agents --help
 
 Todos os comandos operam sobre o diretorio atual (o projeto). Execute-os a partir
 da raiz do projeto onde quer instalar o agente.
+
+### Modo interativo
+
+Rodar `agents install` sem informar nome lista o catalogo e pede a selecao:
+
+```text
+$ agents install
+  1) code-reviewer        1.2.0    Revisa codigo em busca de bugs
+  2) test-writer          0.3.0    Escreve testes a partir do diff
+Selecione os agentes (ex: 1,3  ou  all): 1,2
+```
+
+Aceita numeros separados por virgula ou espaco, ou `all` para instalar tudo. O
+alvo e resolvido uma vez para toda a selecao (detectado pelo projeto ou via
+`--target`).
 
 ### Deteccao de alvo
 
