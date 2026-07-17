@@ -49,7 +49,7 @@ install_agent() { # name target
 }
 
 cmd_install() {
-  name= target=
+  name='' target=''
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --target)

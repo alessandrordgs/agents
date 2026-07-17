@@ -4,7 +4,7 @@
 
 set -eu
 
-AGENTS_HOME=${AGENTS_HOME:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}
+AGENTS_HOME=${AGENTS_HOME:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}
 export AGENTS_HOME
 
 LIB="$AGENTS_HOME/lib"

@@ -1,7 +1,7 @@
 #!/bin/sh
 # T010: instalacao nos tres alvos + idempotencia (cobre SC-002, SC-003, SC-006).
 set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/tests/assert.sh"
 AGENTS="$ROOT/bin/agents"
 

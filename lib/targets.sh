@@ -28,7 +28,7 @@ targets_all() { # conf
 # Detecta o alvo em uso no projeto pelos diretorios marcadores.
 # Ecoa o alvo detectado e retorna 0; se nenhum ou multiplos, retorna 1 (erro em stderr).
 targets_detect() { # conf project_dir
-  conf=$1 proj=$2 found= count=0
+  conf=$1 proj=$2 found='' count=0
   for t in $(targets_all "$conf"); do
     m=$(targets_marker "$conf" "$t")
     if [ -n "$m" ] && [ -d "$proj/$m" ]; then

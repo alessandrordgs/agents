@@ -135,7 +135,7 @@ Single project CLI. `bin/`, `lib/`, `agents/`, `tests/` na raiz do repositorio, 
 
 - [X] T024 [P] Implementar bootstrap `install.sh` na raiz (obtem/atualiza o repo via git e coloca `agents` no PATH, estilo skills.sh)
 - [X] T025 [P] Escrever `README.md` com uso da CLI baseado em quickstart.md
-- [ ] T026 [P] Rodar shellcheck em `bin/agents`, `lib/**/*.sh`, `install.sh` e corrigir apontamentos (PENDENTE: shellcheck nao instalado no ambiente)
+- [X] T026 [P] Rodar shellcheck em `bin/agents`, `lib/**/*.sh`, `install.sh` e corrigir apontamentos
 - [X] T027 Executar validacao do `specs/001-installer-cli/quickstart.md` cobrindo as 4 user stories de ponta a ponta, incluindo assercao de que nenhum arquivo de dependencia do projeto alvo e criado ou alterado (FR-016)
 
 ---

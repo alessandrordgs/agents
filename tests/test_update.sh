@@ -1,7 +1,7 @@
 #!/bin/sh
 # T018: atualizacao de versao, no-op e nao instalado (FR-011, FR-013).
 set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/tests/assert.sh"
 AGENTS="$ROOT/bin/agents"
 

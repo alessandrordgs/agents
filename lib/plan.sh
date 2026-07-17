@@ -18,7 +18,7 @@ plan_lines() { # catalog name target dest
 # Retorna 0 se seguro; 1 e imprime o conflito se houver colisao.
 plan_check_conflicts() { # project_dir lockfile name plan(stdin)
   proj=$1 lockfile=$2 name=$3 conflict=0
-  while IFS='	' read -r src destrel; do
+  while IFS='	' read -r _ destrel; do
     [ -n "$destrel" ] || continue
     destabs="$proj/$destrel"
     if [ -e "$destabs" ] && ! lock_belongs "$lockfile" "$name" "$destrel"; then

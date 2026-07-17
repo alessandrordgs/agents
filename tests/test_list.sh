@@ -1,7 +1,7 @@
 #!/bin/sh
 # T015: listagem com campos e marcacao de instalados (FR-009, FR-010).
 set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/tests/assert.sh"
 AGENTS="$ROOT/bin/agents"
 
