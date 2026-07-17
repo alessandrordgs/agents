@@ -4,4 +4,5 @@ Thumbs.db
 *.swp
 *.log
 .agents/
+.last_update_check
 /tmp-test/

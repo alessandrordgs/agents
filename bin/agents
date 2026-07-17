@@ -33,6 +33,8 @@ export CONF
 # shellcheck source=/dev/null
 . "$LIB/tui.sh"
 # shellcheck source=/dev/null
+. "$LIB/selfupdate.sh"
+# shellcheck source=/dev/null
 . "$LIB/commands/install.sh"
 # shellcheck source=/dev/null
 . "$LIB/commands/list.sh"
@@ -50,19 +52,33 @@ Uso:
   agents list [--installed]
   agents update <nome>
   agents remove <nome>
+  agents --update
 
 O alvo e detectado pelo projeto quando possivel; --target tem precedencia.
+Ao rodar em um terminal, o agents avisa (1x/dia) se houver atualizacao dele
+proprio. Desative com AGENTS_NO_UPDATE_CHECK=1.
 EOF
 }
 
 cmd=${1:-}
 [ "$#" -gt 0 ] && shift || true
 
+# Check de auto atualizacao antes de executar (so em terminal; nunca para --update/help).
+case "$cmd" in
+  --update | -h | --help | help | "") : ;;
+  *)
+    if [ -t 0 ] && [ -r /dev/tty ] && [ -w /dev/tty ] && [ -z "${AGENTS_NO_UPDATE_CHECK:-}" ]; then
+      self_update_check
+    fi
+    ;;
+esac
+
 case "$cmd" in
   install) cmd_install "$@" ;;
   list) cmd_list "$@" ;;
   update) cmd_update "$@" ;;
   remove) cmd_remove "$@" ;;
+  --update) self_update ;;
   -h | --help | help | "") usage ;;
   *)
     printf 'erro: comando desconhecido "%s"\n\n' "$cmd" >&2
