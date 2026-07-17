@@ -1,0 +1,6 @@
+name: frontend-dev
+version: 1.0.0
+description: Desenvolvedor frontend senior (Next.js/React e React Native/Expo) que executa design e correcoes
+target: claude
+  dest: .claude/agents
+  file: claude/frontend-dev.md
