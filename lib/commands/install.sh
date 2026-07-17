@@ -51,9 +51,18 @@ install_agent() { # name target
   return 0
 }
 
-# Menu interativo: lista o catalogo (em stderr) e le a selecao (stdin).
-# Ecoa em stdout os nomes escolhidos. Retorna 1 se catalogo vazio ou nada escolhido.
+# Seleciona do catalogo: TUI de setas num terminal, lista numerada caso contrario
+# (pipe, testes). Ecoa em stdout os nomes escolhidos.
 pick_agents() {
+  if [ -t 0 ] && [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    tui_pick
+  else
+    pick_numbered
+  fi
+}
+
+# Fallback: lista numerada, le a selecao da entrada padrao.
+pick_numbered() {
   i=0
   names=''
   for mf in "$AGENTS_HOME"/agents/*/manifest; do

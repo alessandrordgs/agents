@@ -31,6 +31,8 @@ export CONF
 # shellcheck source=/dev/null
 . "$LIB/render.sh"
 # shellcheck source=/dev/null
+. "$LIB/tui.sh"
+# shellcheck source=/dev/null
 . "$LIB/commands/install.sh"
 # shellcheck source=/dev/null
 . "$LIB/commands/list.sh"

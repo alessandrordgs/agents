@@ -45,18 +45,19 @@ da raiz do projeto onde quer instalar o agente.
 
 ### Modo interativo
 
-Rodar `agents install` sem informar nome lista o catalogo e pede a selecao:
+Rodar `agents install` sem informar nome abre um seletor de setas:
 
 ```text
-$ agents install
-  1) code-reviewer        1.2.0    Revisa codigo em busca de bugs
-  2) test-writer          0.3.0    Escreve testes a partir do diff
-Selecione os agentes (ex: 1,3  ou  all): 1,2
+Selecione os agentes:  setas/jk move · espaco marca · a todos · enter confirma · q cancela
+> [x] ui-design-strategist  Diretor de design senior que faz descoberta...
+  [ ] frontend-dev          Desenvolvedor frontend senior (Next.js/RN)...
+  [x] example-agent         Agente de exemplo usado como fixture de testes
 ```
 
-Aceita numeros separados por virgula ou espaco, ou `all` para instalar tudo. O
-alvo e resolvido uma vez para toda a selecao (detectado pelo projeto ou via
-`--target`).
+Setas (ou `j`/`k`) movem, espaco marca/desmarca, `a` alterna todos, Enter
+confirma, `q` (ou Esc) cancela. Quando a entrada nao e um terminal (pipe, CI), o
+comando cai numa lista numerada que aceita `1,3`, `1 3` ou `all`. O alvo e
+resolvido uma vez para toda a selecao (detectado pelo projeto ou via `--target`).
 
 ### Deteccao de alvo
 
