@@ -35,8 +35,9 @@ agents install <nome> [<nome>...] # instala um ou mais agentes pelo nome
 agents install <nome> --target claude
 agents list                      # catalogo; marca com * os instalados no projeto
 agents list --installed          # apenas os instalados no projeto atual
-agents update <nome>             # atualiza para a versao mais nova do catalogo
+agents update <nome>             # atualiza um agente para a versao mais nova
 agents remove <nome>             # remove, restaurando o estado anterior
+agents --update                  # atualiza o agents e re-renderiza os instalados aqui
 agents --help
 ```
 

@@ -52,7 +52,7 @@ Uso:
   agents list [--installed]
   agents update <nome>
   agents remove <nome>
-  agents --update
+  agents --update              # atualiza o agents e os agentes instalados aqui
 
 O alvo e detectado pelo projeto quando possivel; --target tem precedencia.
 Ao rodar em um terminal, o agents avisa (1x/dia) se houver atualizacao dele

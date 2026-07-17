@@ -1,19 +1,53 @@
 #!/bin/sh
 # Auto atualizacao da CLI (git pull no AGENTS_HOME).
 
-# Atualiza o proprio agents. Retorna 0 em sucesso/no-op, 1 em erro.
+# Re-renderiza os agentes instalados no projeto atual a partir do catalogo novo.
+# ponytail: usa o codigo ja carregado neste processo; se o proprio render mudou no
+# pull, a nova logica so vale no proximo run. Upgrade: re-exec apos o pull.
+refresh_installed() {
+  proj=$PWD
+  lockfile=$(lock_path "$proj")
+  [ -f "$lockfile" ] || return 0
+  names=$(awk -F'\t' '{ print $1 }' "$lockfile" | sort -u)
+  [ -n "$names" ] || return 0
+
+  printf 'Atualizando agentes instalados em %s ...\n' "$proj"
+  for name in $names; do
+    if ! manifest_validate "$AGENTS_HOME" "$name" "$CONF" >/dev/null 2>&1; then
+      printf '  %s: nao esta mais no catalogo, mantido\n' "$name"
+      continue
+    fi
+    tgts=$(awk -F'\t' -v n="$name" '$1 == n { print $3 }' "$lockfile" | sort -u)
+    oldv=$(lock_version "$lockfile" "$name")
+    remove_agent_files "$proj" "$lockfile" "$name"
+    lock_remove_agent "$lockfile" "$name"
+    for t in $tgts; do
+      install_agent "$name" "$t" >/dev/null 2>&1 || printf '  %s (%s): falha\n' "$name" "$t" >&2
+    done
+    newv=$(lock_version "$lockfile" "$name")
+    if [ "$oldv" = "$newv" ]; then
+      printf '  %s: ok (%s)\n' "$name" "$newv"
+    else
+      printf '  %s: %s -> %s\n' "$name" "$oldv" "$newv"
+    fi
+  done
+}
+
+# Atualiza o proprio agents e, em seguida, os agentes instalados no projeto atual.
+# Retorna 0 em sucesso/no-op, 1 em erro.
 self_update() {
   if [ ! -d "$AGENTS_HOME/.git" ]; then
     printf 'erro: %s nao e um repositorio git; reinstale via install.sh\n' "$AGENTS_HOME" >&2
     return 1
   fi
   printf 'Atualizando agents em %s ...\n' "$AGENTS_HOME"
-  if git -C "$AGENTS_HOME" pull --ff-only; then
-    printf 'agents atualizado.\n'
-    return 0
+  if ! git -C "$AGENTS_HOME" pull --ff-only; then
+    printf 'erro: falha ao atualizar (git pull).\n' >&2
+    return 1
   fi
-  printf 'erro: falha ao atualizar (git pull).\n' >&2
-  return 1
+  printf 'agents atualizado.\n'
+  refresh_installed
+  return 0
 }
 
 # Check de startup: se houver atualizacao, pergunta uma vez ao usuario.
