@@ -1,0 +1,59 @@
+#!/bin/sh
+# agents: instalador de agentes via terminal (Codex, Claude, OpenCode).
+# Uso: agents <install|list|update|remove> [args]
+
+set -eu
+
+AGENTS_HOME=${AGENTS_HOME:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}
+export AGENTS_HOME
+
+LIB="$AGENTS_HOME/lib"
+CONF="$AGENTS_HOME/targets.conf"
+export CONF
+
+# shellcheck source=/dev/null
+. "$LIB/manifest.sh"
+# shellcheck source=/dev/null
+. "$LIB/targets.sh"
+# shellcheck source=/dev/null
+. "$LIB/lock.sh"
+# shellcheck source=/dev/null
+. "$LIB/plan.sh"
+# shellcheck source=/dev/null
+. "$LIB/commands/install.sh"
+# shellcheck source=/dev/null
+. "$LIB/commands/list.sh"
+# shellcheck source=/dev/null
+. "$LIB/commands/update.sh"
+# shellcheck source=/dev/null
+. "$LIB/commands/remove.sh"
+
+usage() {
+  cat <<'EOF'
+agents - instalador de agentes via terminal
+
+Uso:
+  agents install <nome> [--target <claude|codex|opencode>]
+  agents list [--installed]
+  agents update <nome>
+  agents remove <nome>
+
+O alvo e detectado pelo projeto quando possivel; --target tem precedencia.
+EOF
+}
+
+cmd=${1:-}
+[ "$#" -gt 0 ] && shift || true
+
+case "$cmd" in
+  install) cmd_install "$@" ;;
+  list) cmd_list "$@" ;;
+  update) cmd_update "$@" ;;
+  remove) cmd_remove "$@" ;;
+  -h | --help | help | "") usage ;;
+  *)
+    printf 'erro: comando desconhecido "%s"\n\n' "$cmd" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
