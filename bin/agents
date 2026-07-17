@@ -4,7 +4,16 @@
 
 set -eu
 
-AGENTS_HOME=${AGENTS_HOME:-$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)}
+# Resolve symlinks para achar a raiz real (AGENTS_HOME sobrescreve, se definido).
+prog=$0
+while [ -L "$prog" ]; do
+  link=$(readlink "$prog")
+  case "$link" in
+    /*) prog=$link ;;
+    *) prog=$(dirname -- "$prog")/$link ;;
+  esac
+done
+AGENTS_HOME=${AGENTS_HOME:-$(CDPATH='' cd -- "$(dirname -- "$prog")/.." && pwd)}
 export AGENTS_HOME
 
 LIB="$AGENTS_HOME/lib"
