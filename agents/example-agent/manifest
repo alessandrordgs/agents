@@ -3,3 +3,4 @@ version: 1.0.0
 description: Agente de exemplo usado como fixture de testes
 source: agent.md
 targets: claude codex opencode
+hidden: true

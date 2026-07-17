@@ -2,10 +2,11 @@
 # Comando: list
 
 cmd_list() {
-  only_installed=0
+  only_installed=0 show_all=0
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --installed) only_installed=1; shift ;;
+      --all) show_all=1; shift ;;
       *) printf 'erro: opcao desconhecida "%s"\n' "$1" >&2; return 2 ;;
     esac
   done
@@ -19,6 +20,7 @@ cmd_list() {
     name=$(basename "$(dirname "$mf")")
     installed=no
     if lock_has "$lockfile" "$name"; then installed=yes; fi
+    if [ "$show_all" -eq 0 ] && [ "$installed" = no ] && manifest_hidden "$mf"; then continue; fi
     if [ "$only_installed" -eq 1 ] && [ "$installed" = no ]; then continue; fi
     version=$(manifest_field "$mf" version)
     desc=$(manifest_field "$mf" description)

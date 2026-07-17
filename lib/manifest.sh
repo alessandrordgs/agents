@@ -32,6 +32,11 @@ manifest_supports() { # manifest_file target
   return 1
 }
 
+# 0 se o agente e oculto (hidden: true), do contrario 1.
+manifest_hidden() { # manifest_file
+  [ "$(manifest_field "$1" hidden)" = "true" ]
+}
+
 # Retorna 0 se valido; caso contrario imprime erro em stderr e retorna 1.
 manifest_validate() { # catalog name targets_conf
   catalog=$1 name=$2 conf=$3

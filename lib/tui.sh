@@ -9,6 +9,7 @@ tui_load_catalog() {
   _ag_N=0
   for mf in "$AGENTS_HOME"/agents/*/manifest; do
     [ -f "$mf" ] || continue
+    if manifest_hidden "$mf"; then continue; fi
     _ag_N=$((_ag_N + 1))
     eval "_ag_name_$_ag_N=\$(basename \"\$(dirname \"\$mf\")\")"
     eval "_ag_ver_$_ag_N=\$(manifest_field \"\$mf\" version)"

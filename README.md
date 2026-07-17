@@ -65,15 +65,15 @@ Todos os comandos agem sobre o diretório atual. Rode-os na raiz do projeto.
 `agents install` sem nome abre um seletor de setas:
 
 ```text
-Selecione os agentes:  setas/jk move · espaco marca · a todos · enter confirma · q cancela
-> [x] ui-design-strategist  Diretor de design senior que faz descoberta...
-  [ ] frontend-dev          Desenvolvedor frontend senior (Next.js/RN)...
-  [x] example-agent         Agente de exemplo usado como fixture de testes
+Escolha os agentes  setas marca com espaco · a todos · enter confirma · q cancela
+ › ● ui-design-strategist  Diretor de design senior que faz descoberta...
+   ○ frontend-dev          Desenvolvedor frontend senior (Next.js/RN)...
+ 1 marcado(s)
 ```
 
 Setas (ou `j`/`k`) movem, espaço marca, `a` alterna todos, Enter confirma, `q`/Esc
-cancela. Fora de um terminal (pipe, CI) ele vira uma lista numerada que aceita `1,3`,
-`1 3` ou `all`.
+cancela. A linha atual fica destacada e os marcados aparecem com `●` verde. Fora de um
+terminal (pipe, CI) ele vira uma lista numerada que aceita `1,3`, `1 3` ou `all`.
 
 ---
 

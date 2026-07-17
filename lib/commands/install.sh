@@ -67,6 +67,7 @@ pick_numbered() {
   names=''
   for mf in "$AGENTS_HOME"/agents/*/manifest; do
     [ -f "$mf" ] || continue
+    if manifest_hidden "$mf"; then continue; fi
     i=$((i + 1))
     name=$(basename "$(dirname "$mf")")
     version=$(manifest_field "$mf" version)
