@@ -7,6 +7,7 @@
 # Carrega o catalogo em variaveis _ag_N e _ag_name_i / _ag_ver_i / _ag_desc_i.
 tui_load_catalog() {
   _ag_N=0
+  _ag_w=0
   for mf in "$AGENTS_HOME"/agents/*/manifest; do
     [ -f "$mf" ] || continue
     if manifest_hidden "$mf"; then continue; fi
@@ -14,17 +15,64 @@ tui_load_catalog() {
     eval "_ag_name_$_ag_N=\$(basename \"\$(dirname \"\$mf\")\")"
     eval "_ag_ver_$_ag_N=\$(manifest_field \"\$mf\" version)"
     eval "_ag_desc_$_ag_N=\$(manifest_field \"\$mf\" description)"
+    eval "nm=\$_ag_name_$_ag_N"
+    [ "${#nm}" -le "$_ag_w" ] || _ag_w=${#nm}
   done
 }
 
-tui_trunc() { printf '%.44s' "$1"; }
+# Largura do terminal. stty ja e dependencia do seletor, tput nao e.
+tui_cols() {
+  # shellcheck disable=SC2046  # split intencional de "linhas colunas"
+  set -- $(stty size </dev/tty 2>/dev/null)
+  _c=${2:-}
+  case "$_c" in '' | *[!0-9]*) _c=${COLUMNS:-80} ;; esac
+  case "$_c" in '' | *[!0-9]*) _c=80 ;; esac
+  [ "$_c" -ge 40 ] || _c=80
+  printf '%s' "$_c"
+}
+
+# Corta no orcamento e marca o corte com reticencias, recuando ate o ultimo espaco
+# para nunca partir um caractere multibyte ao meio.
+# ponytail: orcamento em bytes no dash e em caracteres no bash; com acento a linha so
+# fica mais curta que o disponivel, nunca estoura. Upgrade: contar colunas de verdade.
+tui_trunc() { # texto largura
+  _t=$1
+  _m=$(( $2 - 1 ))
+  [ "$_m" -ge 1 ] || _m=1
+  [ "${#_t}" -gt "$_m" ] || { printf '%s' "$_t"; return; }
+  _x=ç
+  while [ "${#_t}" -gt "$_m" ]; do
+    case "$_t" in
+      *' '*) _t=${_t% *} ;;
+      *)
+        _t=${_t%?}
+        # Sem espaco para recuar: no shell que corta byte (dash), o corte pode cair
+        # dentro de um caractere; descarta o resto dele ate sobrar um byte ASCII.
+        while [ "${#_x}" -ne 1 ] && [ -n "$_t" ]; do
+          case "$_t" in *[!\ -~]) _t=${_t%?} ;; *) break ;; esac
+        done
+        ;;
+    esac
+  done
+  printf '%s…' "$_t"
+}
+
+# Completa com espacos a direita ate a largura (nomes sao slugs ASCII, byte = coluna).
+tui_pad() { # texto largura
+  _p=$1
+  while [ "${#_p}" -lt "$2" ]; do _p="$_p "; done
+  printf '%s' "$_p"
+}
 
 tui_colors() {
   if [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
     T_RESET=$(printf '\033[0m'); T_BOLD=$(printf '\033[1m'); T_DIM=$(printf '\033[2m')
     T_CYAN=$(printf '\033[36m'); T_GREEN=$(printf '\033[32m')
+    T_BG=$(printf '\033[48;5;237m')
+    T_FGD=$(printf '\033[39m'); T_NORM=$(printf '\033[22m')
   else
     T_RESET='' T_BOLD='' T_DIM='' T_CYAN='' T_GREEN=''
+    T_BG='' T_FGD='' T_NORM=''
   fi
 }
 
@@ -57,25 +105,30 @@ tui_render() { # first?
   if [ "$1" -ne 1 ]; then
     printf '\033[%dA' "$((_ag_N + 1))" >/dev/tty
   fi
+  _ag_dw=$(( $(tui_cols) - _ag_w - 8 ))
+  [ "$_ag_dw" -ge 12 ] || _ag_dw=12
   i=1 nm='' ds=''
   while [ "$i" -le "$_ag_N" ]; do
     eval "nm=\$_ag_name_$i"
     eval "ds=\$_ag_desc_$i"
     case "$_ag_sel" in
-      *" $i "*) box="$T_GREEN●$T_RESET" ;;
-      *) box="$T_DIM○$T_RESET" ;;
+      *" $i "*) mark="$T_GREEN●" ;;
+      *) mark="$T_DIM○" ;;
     esac
     if [ "$i" -eq "$_ag_cur" ]; then
-      printf '\r\033[K %s›%s %s %s%-22s%s %s%s%s\n' \
-        "$T_CYAN" "$T_RESET" "$box" "$T_BOLD" "$nm" "$T_RESET" "$T_DIM" "$(tui_trunc "$ds")" "$T_RESET" >/dev/tty
+      # ponytail: fundo ate o fim da linha via \033[K com bg ativo (BCE), em vez de
+      # padding manual; padding que erre a largura quebra a linha e estraga o redesenho.
+      printf '\r%s %s›%s%s %s%s%s %s%s%s  %s%s\033[K%s\n' \
+        "$T_BG" "$T_CYAN" "$T_FGD" "$T_NORM" "$mark" "$T_FGD" "$T_NORM" \
+        "$T_BOLD" "$(tui_pad "$nm" "$_ag_w")" "$T_NORM" "$T_DIM" "$(tui_trunc "$ds" "$_ag_dw")" "$T_RESET" >/dev/tty
     else
-      printf '\r\033[K   %s %-22s %s%s%s\n' \
-        "$box" "$nm" "$T_DIM" "$(tui_trunc "$ds")" "$T_RESET" >/dev/tty
+      printf '\r\033[K   %s%s %s  %s%s%s\n' \
+        "$mark" "$T_RESET" "$(tui_pad "$nm" "$_ag_w")" "$T_DIM" "$(tui_trunc "$ds" "$_ag_dw")" "$T_RESET" >/dev/tty
     fi
     i=$((i + 1))
   done
   cnt=$(printf '%s' "$_ag_sel" | wc -w | tr -d ' ')
-  printf '\r\033[K %s%s marcado(s)%s\n' "$T_DIM" "$cnt" "$T_RESET" >/dev/tty
+  printf '\r\033[K %s%s de %s marcados%s\n' "$T_DIM" "$cnt" "$_ag_N" "$T_RESET" >/dev/tty
 }
 
 tui_toggle() { # selected cur  -> nova string
@@ -100,7 +153,7 @@ tui_pick() {
   stty -echo -icanon min 1 time 0 </dev/tty
   printf '\033[?25l' >/dev/tty
 
-  printf '%sEscolha os agentes%s  %ssetas marca com espaco · a todos · enter confirma · q cancela%s\n' \
+  printf '%sEscolha os agentes%s  %s↑↓ navega · espaço marca · a marca todos · enter confirma · q cancela%s\n' \
     "$T_BOLD" "$T_RESET" "$T_DIM" "$T_RESET" >/dev/tty
 
   _ag_cur=1 _ag_sel=' '
